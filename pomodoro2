@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+
+from datetime import datetime
+import time
+import os
+from gi.repository import AppIndicator3 as ap
+from gi.repository import Gtk as gtk
+from gi.repository import Notify as notify
+import sys
+import signal
+
+INDICATOR_ID = "PomodorIndicator"
+
+class Pomodor:
+	def __init__(self):
+		self.ind = ap.Indicator.new(INDICATOR_ID, os.path.abspath("tomato.png"), ap.IndicatorCategory.SYSTEM_SERVICES)
+		self.ind.set_status(ap.IndicatorStatus.ACTIVE)
+		self.menu_setup()
+
+		self.ind.set_menu(self.menu)
+
+	def menu_setup(self):
+		self.menu = gtk.Menu()
+		self.timer_item = gtk.MenuItem("")
+		self.start_item = gtk.MenuItem("Start")
+		self.start_item.connect("activate", self.start)
+		self.stop_item = gtk.MenuItem("Stop")
+		self.stop_item.connect("activate", self.stop)
+		self.quit_item = gtk.MenuItem("Quit")
+		self.quit_item.connect('activate', self.quit)
+		self.menu.append(self.timer_item)
+		self.menu.append(self.start_item)
+		self.menu.append(self.stop_item)
+		self.menu.append(self.quit_item)
+		self.menu.show_all()
+
+	def main(self):
+		notify.init(INDICATOR_ID)
+		gtk.main()
+
+	def start(self, widget):
+		self.timer_item.do_set_label(self.timer_item, "00:00")
+		end = time.ctime(time.time() + 3000)
+		notify.Notification.new("Pomodoro Started", "Pomodoro will end at " + end[10:-5]).show()
+		print "sim"
+
+	def stop(self, widget):
+		self.timer_item.do_set_label(self.timer_item, "")
+		notify.Notification.new("Pomodoro Ended", "You finished a pomodoro").show()
+
+	def quit(self, widget):
+		sys.exit(0)
+
+
+if __name__ == '__main__':
+	indicator = Pomodor()
+	indicator.main()
