@@ -1,52 +1,11 @@
 #!/usr/bin/env python
 
 from datetime import datetime
+import time
 import os
 from gi.repository import AppIndicator3 as ap
 from gi.repository import Gtk as gtk
 from gi.repository import Notify as notify
 import sys
-import signal
-
-INDICATOR_ID = "PomodorIndicator"
-
-def main():
-	"""
-	Main function for the indicator
-	"""
-	indicator = ap.Indicator.new(INDICATOR_ID, os.path.abspath('tomato.png'), ap.IndicatorCategory.SYSTEM_SERVICES) #inicializes the appindicator
-	indicator.set_status(ap.IndicatorStatus.ACTIVE) #changes status to active
-	indicator.set_menu(menu_builder()) #adds menu
-	signal.signal(signal.SIGINT, signal.SIG_DFL)
-	notify.init(INDICATOR_ID) #initializes the notify
-	gtk.main() #enter the gtk cycle
-
-def menu_builder():
-	"""
-	Menu Builder for the indicator
-	"""
-	menu = gtk.Menu() #creates a new menu
-	item_start = gtk.MenuItem("Start")
-	item_start.connect("activate", start)
-	item_quit = gtk.MenuItem("Quit") #creates a new menu item
-	item_quit.connect('activate', quit) #activates the menu item with a function
-	menu.append(item_start)
-	menu.append(item_quit)
-	menu.show_all()
-	return menu
-
-def quit(source):
-	"""
-	A function to close the indicator
-	"""
-	notify.uninit()
-	gtk.main_quit() #leaves the gtk cycle
-
-def start(source):
-	item_timer = gtk.MenuItem()
-	print "Start"
 
 
-
-if __name__ == '__main__':
-	main()
