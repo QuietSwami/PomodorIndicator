@@ -1,2 +1,158 @@
 #!/usr/bin/env python
 
+from datetime import datetime
+import time
+import os
+from gi.repository import AppIndicator3 as ap
+from gi.repository import Gtk as gtk
+from gi.repository import Notify as notify
+import sys
+
+class Pomodoro:
+	def __init__(self, time_limit, short_interval, long_interval):
+		"""
+		Initializing function
+		"""
+		self.timer = time_limit
+		self.state = "stopped"
+		self.short_interval = short_interval
+		self.long_interval = long_interval
+		self.number_of_pomodoros = 0
+		self.elapsed_time = 0
+		self.previous_state = None
+
+	def state(self):
+		return self.state
+
+	def timer(self):
+		"""
+		Timer function. Adds 1 each second to the elapsed time. 
+		Returns True if timer is below the timer.
+		If the elapsed timer is greater or equal to the timer, sets
+		the elapsed timer to 0 and returns False.
+		"""
+		self.elapsed_time += 1
+		if self.elapsed_time >= self.timer:
+			self.elapsed_time = 0
+			return False
+		return True
+
+	def start(self):
+		"""
+		Start function.
+		Changes states.
+		"""
+		if self.previous_state == None:
+			self.previous_state = "running"
+		self.state = "running"
+		self.allowed_items = []
+		if not timer(self.timer):
+			self.state = "stopped"
+			self.previous_state = "running"
+			self.elapsed_time = 0
+			self.number_of_pomodoros += 1
+			return True
+		return False
+
+	def stop(self):
+		"""
+		Stop function
+		Changes states and enters interval.
+		"""
+		if self.previous_state == "running":
+			if self.number_of_pomodoros % 4 == 0:
+				self.elapsed_time = 0
+				self.interval(self.long_interval)
+			else:
+				self.elapsed_time = 0
+				self.interval(self.short_interval)
+
+	def interval(self, interval):
+		self.state = "interval"
+		if not timer(interval):
+			self.state = "stopped"
+			self.previous_state = "interval"
+			self.elapsed_time = 0
+			return True
+		return False
+
+	def pause(self):
+		self.previous_state = self.state
+		self.state = "paused"
+		
+	def resume(self):
+		self.state = self.previous_state
+		self.previous_state = "paused"
+
+	def __repr__(self):
+		"""
+		Representation of the elapsed time in the correct format
+		"""
+		minutes = elapsed_time / 60
+		seconds = elapsed_time - minutes * 60
+		return "%02d:%02d" %(minutes,seconds)
+
+class Indicator:
+
+	def __init__(self):
+		self.pomodoro = Pomodoro(1800, 300, 900)
+		self.ind = ap.Indicator.new("pomodoro", os.path.abspath("tomato.png"), ap.IndicatorCategory.APPLICATION_STATUS)
+		self.ind.set_status(ap.IndicatorStatus.ACTIVE)
+		self.menu_setup()
+		self.ind.set_menu(self.menu)
+		self.timer = None
+		notify.init("pomodoro")
+
+
+	def menu_setup(self):
+		self.menu = gtk.Menu()
+		self.quitSeparator = gtk.SeparatorMenuItem()
+		self.timer_item = gtk.MenuItem("00:00")
+		self.start_item = gtk.MenuItem("Start")
+		self.stop_item = gtk.MenuItem("Stop")
+		self.pause_item = gtk.MenuItem("Pause")
+		self.resume_item = gtk.MenuItem("Resume")
+		self.quit_item = gtk.MenuItem("Quit")
+
+		self.menuStates = {"stopped": [self.start_item, self.quit_item], "running": [self.timer_item, self.pause_item, self.stop_item, self.quit_item], "paused" : [self.timer_item, self.resume_item, self.stop_item, self.quit_item],"interval": [self.start_item, self.quit_item]}
+		
+		self.hidable_item = [self.timer_item, self.start_item, self.pause_item, self.resume_item, self.stop_item]
+
+		self.start_item.connect("activate", self.start)
+		self.stop_item.connect("activate", self.stop)
+		self.pause_item.connect("activate", self.pause)
+		self.resume_item.connect("activate", self.resume)
+		self.quit_item.connect("activate", self.quit)
+        
+		self.menu_items = [self.timer_item, self.start_item, self.pause_item, self.resume_item, self.stop_item, self.quitSeparator, self.quit_item]
+
+ 		for i in self.menu_items:
+			i.show()
+			self.menu.append(i)
+	
+	def update_timer(self):
+		time = self.timer_item.child
+		while self.pomodoro.timer()
+			time.set_text()
+	def start(self, widget):
+		pass
+
+	def resume(self, widget):
+		pass
+	
+	def pause(self, widget):
+		pass
+
+	def stop(self, widget):
+		pass
+
+	def quit(self, widget):
+		sys.exit(0)
+
+	def main(self):
+		gtk.main()
+
+
+if __name__ == '__main__':
+	indicator = Indicator()
+	indicator.main()
