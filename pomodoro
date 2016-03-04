@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+
+
+"""
 
 from datetime import datetime
 import time
@@ -11,7 +17,18 @@ import sys
 import pygame
 
 class Pomodoro:
+
 	def __init__(self, time_limit, short_interval, long_interval):
+		"""
+		Pomodoro class initializer.
+
+		Args:
+			time_limit (int): Duration of a pomodoro.
+			short_interval (int): Duration of the short interval
+			long_interval (int): Duration of the long interval
+		
+		"""
+
 		self.pomodoro_time = time_limit
 		self.time_limit = 0
 		self.short_interval = short_interval
@@ -20,45 +37,49 @@ class Pomodoro:
 		self.elapsed_time = 0
 
 	def timer(self):
+		"""
+		This function adds 1 to the elapsed_time.
+
+		Returns:
+			True if the elapsed_time is lower than the time_limit, False otherwise.
+
+		"""
+
 		self.elapsed_time += 1
 		if self.elapsed_time > self.time_limit:
 			self.elapsed_time = 0
 			return False
 		return True
 
-	def start_timer(self):
-		timer = self.timer()
-		if not timer:
-			self.stop_to_interval()
-			self.number_of_pomodoros += 1
-			return False
-		return True
+	def start(self):
+		"""
+		Starts a new pomodoro.
+		"""
 
-	def start_pomodoro(self):
 		self.time_limit = self.pomodoro_time
-		if not self.start_timer():
-			self.stop_to_interval()
-
-	def stop_to_interval(self):
-		self.elapsed_time = 0
-		if self.number_of_pomodoros % 4 == 0:
-			self.start_interval(self.long_interval)
-		else:
-			self.start_interval(self.short_interval)
-
-	def start_interval(self, interval):
-		self.start_timer()
-
-	def stop(self):
 		self.elapsed_time = 0
 
 	def format(self):
+		"""
+		Formats the elapsed_time to the appropriate label format.
+
+		Retruns:
+			A string with the format : Minutes : Seconds.
+		"""
+
 		minutes = self.elapsed_time / 60
 		seconds = self.elapsed_time	- minutes * 60
 		return "%02d:%02d"  % (minutes, seconds)
+
+
 class Indicator:
 	def __init__(self):
-		self.pomodoro = Pomodoro(1800, 300, 900)
+		"""
+		Indicator class intiializer. 
+		The main class in the script.
+		"""
+
+		self.pomodoro = Pomodoro(10, 300, 900)
 		pygame.init()
 		notify.init("pomodoro")
 		self.ind = ap.Indicator.new("pomodoro", os.path.abspath("tomato.png"), ap.IndicatorCategory.APPLICATION_STATUS)
@@ -68,6 +89,12 @@ class Indicator:
 		self.timer = None
 
 	def menu_setup(self):
+		"""
+		Creates the menu.
+
+		Also creates the several states that the script might have.
+		"""
+
 		self.menu = gtk.Menu()
 		self.timer_separator = gtk.SeparatorMenuItem()
 		self.timer_item = gtk.MenuItem("00:00")
@@ -97,46 +124,94 @@ class Indicator:
 			i.show()
 
 	def hide_all(self):
+		"""
+		Hides all the menu items.
+		"""
+
 		for i in self.menu_items:
 			i.hide()
 
 	def update_menu(self, state):
+		"""
+		Updates the menu given a state.
+
+		Args:
+			state (str): A String with the name of a state. 
+		"""
+
 		for i in self.menu_states[state]:
 			i.show()
 
 	def update_timer(self):
-		time = self.pomodoro.start_timer()
+		"""
+		Updates the label of the timer_item.
+
+		Returns:
+			True while the timer doesn't end. False otherwise.
+		"""
+
+		time = self.pomodoro.timer()
 		if time:
 			self.timer_item.set_label(self.pomodoro.format())
 			return True
 		return False
 
 	def start(self, widget):
+		"""
+		This function is connected to the Start button in the menu.
+		Start a new pomodoro, updates the menu, and notifies the user.
+		"""
+
 		self.hide_all()
 		self.update_menu("running")
-		notify.Notification.new("Pomodoro Started", "The pomodoro will end at " + time.strftime("%H:%M:%S", time.gmtime(time.time() + self.pomodoro.pomodoro_time)))
+		self.pomodoro.start()
+		notify.Notification.new("Pomodoro Started", "Pomodoro will end at " + time.strftime("%H:%M:%S", time.gmtime(time.time() + 1800))).show()
 		self.timer = glib.timeout_add_seconds(1, self.update_timer)
-		pass
 
 	def pause(self, widget):
+		"""
+		This function is connected to the Pause button in the menu.
+		"Pauses" the timer, and changes the menu state to "paused". 
+		"""
+
 		self.hide_all()
 		self.update_menu("paused")
 		pass
 
 	def resume(self, widget):
+		"""
+		This function is connected to the Resume button in the menu.
+		Resumes the timer, and changes the menu state to "running"
+		"""
+
 		self.hide_all()
 		self.update_menu("running")
 		pass
 
 	def stop(self, widget):
+		"""
+		This function is connected to the Stop button in the menu.
+		Stops the current pomodoro, changes the menu state to "stopped", and notifies the user.
+		"""
+
 		self.hide_all()
 		self.update_menu("stopped")
 		pass
 
 	def quit(self, widget):
+		"""
+		This function is connected to the Quit button in the menu.
+		Exits the script.
+		"""
+
 		sys.exit(0)
 
 	def main(self):
+		"""
+		Main function in the script.
+		Starts the GTK.
+		"""
+
 		gtk.main()
 
 if __name__ == '__main__':
